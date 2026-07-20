@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferena — indumentaria</title>
+<meta name="description" content="Ferena. Catálogo de indumentaria.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===================== GATE: login de administrador (oculto por defecto) ===================== -->
+<div id="gate" class="hidden">
+  <div class="ticket">
+    <p class="mark">Ferena</p>
+    <p class="sub eyebrow">indumentaria</p>
+    <p class="prompt">Ingresá como administrador</p>
+
+    <form class="admin-login show" id="adminLoginForm">
+      <div class="field">
+        <label for="adminEmail">Email</label>
+        <input type="email" id="adminEmail" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="adminPass">Contraseña</label>
+        <input type="password" id="adminPass" autocomplete="current-password" required>
+      </div>
+      <p class="form-error" id="adminError"></p>
+      <button type="submit" class="btn-primary" id="adminSubmit">Ingresar</button>
+      <button type="button" class="btn-text" id="adminBack">‹ Cancelar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== NAV ===================== -->
+<header class="nav">
+  <span class="wordmark">Ferena</span>
+  <div style="display:flex; align-items:center;">
+    <span class="role-chip" id="roleChip">
+      <span class="dot"></span> <span id="roleChipText">Invitado</span>
+    </span>
+    <button class="exit" id="btnExit">Cambiar rol</button>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <p class="kicker eyebrow">Colección permanente</p>
+  <h1>Ferena</h1>
+  <p class="tagline">Indumentaria · Buenos Aires</p>
+  <div class="scroll-cue"><span>Ver catálogo</span><span class="line"></span></div>
+</section>
+
+<!-- ===================== CATALOGO ===================== -->
+<main class="catalog">
+  <div class="catalog-head">
+    <h2>Catálogo</h2>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <span class="catalog-count" id="catalogCount">— prendas</span>
+      <button class="btn-text tag-manage-btn hidden" id="btnManageTags">Gestionar etiquetas</button>
+    </div>
+  </div>
+
+  <div class="filter-bar hidden" id="filterBar">
+    <!-- desplegables por categoría (Talle / Marca / Tipo) renderizados por JS -->
+  </div>
+
+  <div class="grid" id="grid">
+    <!-- las prendas se renderizan acá por JS -->
+  </div>
+</main>
+
+<footer>
+  <span>Ferena © 2026</span>
+  <span id="footerRole">Modo invitado</span>
+</footer>
+
+<!-- ===================== MODAL: alta / edición de prenda ===================== -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Agregar prenda</h3>
+    <form id="productForm">
+      <div class="field">
+        <label for="pTitulo">Título</label>
+        <input type="text" id="pTitulo" required>
+      </div>
+      <div class="field">
+        <label for="pDescripcion">Descripción</label>
+        <textarea id="pDescripcion" required></textarea>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="pPrecio">Precio</label>
+          <input type="text" id="pPrecio" placeholder="$ 0000" required>
+        </div>
+        <div class="field">
+          <label for="pStock">Estado</label>
+          <input type="text" id="pStock" placeholder="Disponible / Agotado" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="pLink">Link de compra (opcional)</label>
+        <input type="url" id="pLink" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label for="pFoto">Fotos (podés elegir varias)</label>
+        <input type="file" id="pFoto" accept="image/*" multiple>
+        <div class="photo-list" id="pFotoList"></div>
+      </div>
+      <div class="field">
+        <label>Etiquetas (Talle / Marca / Tipo)</label>
+        <div class="tag-picker" id="tagPicker">
+          <!-- checkboxes agrupados por categoría, renderizados por JS -->
+        </div>
+        <p class="eyebrow" id="tagPickerEmpty" style="margin-top:4px;">Todavía no creaste etiquetas — usá "Gestionar etiquetas".</p>
+      </div>
+      <p class="form-error" id="productError"></p>
+      <div class="actions">
+        <button type="button" class="btn-text" id="modalCancel">Cancelar</button>
+        <button type="submit" class="btn-primary" id="productSubmit">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===================== DETALLE flotante (estilo Marketplace) ===================== -->
+<div class="detail-overlay hidden" id="detailOverlay">
+  <div class="detail-panel">
+    <button class="detail-close" id="detailClose" aria-label="Cerrar">✕</button>
+
+    <div class="detail-media">
+      <div class="detail-slide-wrap">
+        <img id="detailImg" alt="">
+        <button class="slide-arrow prev" id="detailPrev" aria-label="Foto anterior">‹</button>
+        <button class="slide-arrow next" id="detailNext" aria-label="Foto siguiente">›</button>
+        <div class="slide-dots" id="detailDots"></div>
+      </div>
+      <div class="thumb-strip" id="detailThumbs"></div>
+    </div>
+
+    <div class="detail-info">
+      <h3 id="detailTitulo"></h3>
+      <div class="detail-meta">
+        <span class="price" id="detailPrecio"></span>
+        <span class="stock" id="detailStock"></span>
+      </div>
+      <div class="detail-divider"></div>
+      <p class="eyebrow">Descripción</p>
+      <p id="detailDescripcion" class="detail-desc"></p>
+      <div class="detail-tags" id="detailTags"></div>
+      <div id="detailBuyWrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: gestionar etiquetas (admin) ===================== -->
+<div class="modal-overlay hidden" id="tagsModalOverlay">
+  <div class="modal">
+    <h3>Gestionar etiquetas</h3>
+    <form id="newTagForm" style="flex-direction:row; gap:8px; display:flex;">
+      <select id="newTagCategoria" style="background:var(--bg-elev); border:1px solid var(--hairline-strong); color:var(--text); font-family:var(--font-mono); font-size:12px; padding:0 8px;">
+        <option value="talle">Talle</option>
+        <option value="marca">Marca</option>
+        <option value="tipo">Tipo</option>
+      </select>
+      <input type="text" id="newTagInput" placeholder="Nombre de la etiqueta" style="flex:1; background:transparent; border:1px solid var(--hairline-strong); color:var(--text); font-family:var(--font-body); font-size:14px; padding:10px;">
+      <button type="submit" class="btn-primary" style="width:auto; padding:10px 16px;">Crear</button>
+    </form>
+    <p class="form-error" id="tagsError"></p>
+    <div class="tags-manage-list" id="tagsManageList">
+      <!-- lista de etiquetas existentes, con borrar -->
+    </div>
+    <div class="actions">
+      <button type="button" class="btn-text" id="tagsModalClose" style="flex:1; border:1px solid var(--hairline-strong); padding:12px;">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
