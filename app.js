@@ -590,7 +590,7 @@ document.addEventListener("keydown", (e) => {
 // (sin Firebase Storage: la guardamos como texto dentro del
 // documento de Firestore, así que tiene que ser liviana)
 // ---------------------------------------------------------------
-function compressImage(file, maxSize = 720, quality = 0.65){
+function compressImage(file, maxSize = 900, quality = 0.75){
   return new Promise((resolve, reject) => {
     const img = new Image();
     const reader = new FileReader();
@@ -668,11 +668,26 @@ function renderPhotoList(){
 modalCancel.addEventListener("click", closeModal);
 modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) closeModal(); });
 
+const MAX_FOTOS = 4; // con más calidad por foto, hasta 4 entra cómodo en el límite de Firestore
+
 pFoto.addEventListener("change", async () => {
   const files = [...pFoto.files];
   if (!files.length) return;
-  productError.textContent = "Comprimiendo fotos…";
-  for (const file of files) {
+
+  const espacioDisponible = MAX_FOTOS - pendingFotos.length;
+  if (espacioDisponible <= 0) {
+    productError.textContent = `Como máximo podés cargar ${MAX_FOTOS} fotos por prenda. Sacá alguna para agregar otra.`;
+    pFoto.value = "";
+    return;
+  }
+  const aProcesar = files.slice(0, espacioDisponible);
+  if (files.length > espacioDisponible) {
+    productError.textContent = `Solo se agregaron ${espacioDisponible} foto(s): el máximo es ${MAX_FOTOS} por prenda.`;
+  } else {
+    productError.textContent = "Comprimiendo fotos…";
+  }
+
+  for (const file of aProcesar) {
     try {
       const compressed = await compressImage(file);
       pendingFotos.push(compressed);
@@ -680,7 +695,7 @@ pFoto.addEventListener("change", async () => {
       console.error(err);
     }
   }
-  productError.textContent = "";
+  if (files.length <= espacioDisponible) productError.textContent = "";
   pFoto.value = "";
   renderPhotoList();
 });
